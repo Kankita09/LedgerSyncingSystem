@@ -21,14 +21,27 @@ Each agent performs a specialized role in reconciliation analysis.
 ## Project Architecture
 
 ```
-project/
-│
+LedgerSyncingSystem/
 ├── agents/
+│   ├── __init__.py
+│   ├── anomaly_detection_agent.py
+│   ├── data_simulation_agent.py
+│   ├── explanation_agent.py
+│   ├── reconciliation_agent.py
+│   ├── reporting_agent.py
+│   └── test_cases_agent.py
 ├── data/
-├── streamlit_app.py
+│   ├── bank_settlements.csv
+│   ├── platform_transactions.csv
+│   ├── reconciliation_report.json
+│   └── reconciliation_report.txt
+├── README.md
 ├── main.py
 ├── requirements.txt
-└── README.md
+├── streamlit_app.py
+├── technical_report.md
+└── verify.py
+
 ```
 
 ## Agent Responsibilities
