@@ -1,0 +1,16 @@
+RECONCILIATION SUMMARY
+
+Total platform transactions: 40
+Total bank settlement records: 42
+
+Platform total amount: 35433.44
+Bank total amount: 37023.36
+
+Net difference: 1589.92
+
+Late settlements: 1
+Duplicate entries: 1
+Rounding differences: 1
+Orphan refunds: 1
+
+These anomalies explain why the platform ledger and bank settlement totals differ at month end.

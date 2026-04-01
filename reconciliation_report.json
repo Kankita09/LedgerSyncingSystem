@@ -1,0 +1,48 @@
+{
+    "summary_statistics": {
+        "total_platform_transactions": 40,
+        "total_bank_settlements": 42,
+        "total_platform_amount": 35433.44,
+        "total_bank_amount": 37023.36,
+        "net_difference_between_totals": 1589.92
+    },
+    "anomaly_counts": {
+        "late_settlement_anomalies": 1,
+        "duplicate_entry_anomalies": 1,
+        "rounding_difference_anomalies": 1,
+        "orphan_refund_anomalies": 1
+    },
+    "financial_difference": {
+        "net_difference": 1589.92
+    },
+    "explanations": [
+        {
+            "transaction_id": "TXN-1005",
+            "issue_type": "LATE_SETTLEMENT",
+            "detailed_explanation": "Transaction TXN-1005 was captured on the platform on 2026-03-19 but the corresponding funds did not clear the banking system until 2026-04-03, which falls after the March 31, 2026 month-end cutoff. As a result, this transaction is visible in the platform ledger for March but is absent from the March bank settlement report. It will appear in the April bank statement instead, creating a temporary timing gap between the two records.",
+            "financial_impact": "Platform ledger overstates March receipts relative to the bank statement by the amount of this transaction. The gap self-corrects when the April bank statement is received and matched.",
+            "recommended_action": "Flag this transaction as 'Timing Difference \u2014 Pending April Settlement'. Re-run reconciliation after the April bank statement is available to confirm clearance. No financial adjustment is required at this stage."
+        },
+        {
+            "transaction_id": "TXN-1012",
+            "issue_type": "DUPLICATE_BANK_ENTRY",
+            "detailed_explanation": "Transaction TXN-1012 (amount: $1739.91) appears 2 times in the bank settlement file. Only one settlement record is expected per transaction. The extra 1 occurrence(s) are duplicate entries likely introduced by a retry mechanism, a double-posting in the payment processor, or an ingestion error in the bank data pipeline. These duplicates inflate the bank settlement total by $1739.91 compared to the platform ledger.",
+            "financial_impact": "Bank total is overstated by $1739.91 due to 1 duplicate settlement record(s) for TXN-1012. This causes the platform-to-bank reconciliation to show an apparent surplus in the bank that does not reflect actual funds received.",
+            "recommended_action": "Investigate the payment processor log for TXN-1012 to confirm that only one settlement was actually processed. Remove or void the duplicate bank record(s) after confirmation. If a genuine double-payment occurred, initiate a reversal or refund process immediately."
+        },
+        {
+            "transaction_id": "TXN-1020",
+            "issue_type": "ROUNDING_DIFFERENCE",
+            "detailed_explanation": "Transaction TXN-1020 shows a minor discrepancy between the platform-recorded amount ($96.47) and the bank-settled amount ($96.48), settled on 2026-03-28. The difference of $+0.0100 is sub-cent and falls within accepted rounding tolerance. Such differences commonly arise from floating-point arithmetic in payment gateways, intermediary currency conversion rounding, or truncation versus rounding policies applied differently across systems.",
+            "financial_impact": "Net discrepancy of $0.0100 \u2014 immaterial for individual transactions. If the same rounding bias applies across many transactions, cumulative drift across large transaction volumes could become significant at an aggregate level.",
+            "recommended_action": "Post a rounding adjustment journal entry of $0.0100 to clear the balance. Review the payment gateway's rounding configuration to align it with the platform's rounding rules and prevent recurring cent-level differences. Consider automating a tolerance-based auto-match rule for differences \u2264 $0.05 to reduce manual effort."
+        },
+        {
+            "transaction_id": "TXN-REFUND-9999",
+            "issue_type": "ORPHAN_REFUND",
+            "detailed_explanation": "Bank entry TXN-REFUND-9999 records a refund of $150.00 credited on 2026-03-28 00:00:00, but there is no corresponding transaction in the platform ledger. This is an orphan refund \u2014 the bank processed a credit without a matching original transaction being present in the platform data. Possible causes include: (1) the original transaction was never ingested into the platform due to a pipeline failure, (2) the refund was initiated externally via the bank or payment processor and not reflected in the platform, or (3) the refund relates to a transaction from a prior period that has since been archived.",
+            "financial_impact": "Bank settlement total is understated by $150.00 relative to the platform ledger. This unmatched credit reduces net bank receipts for March without a corresponding platform expense, causing a genuine financial discrepancy rather than a timing difference.",
+            "recommended_action": "Immediately investigate the source of refund TXN-REFUND-9999. Search payment processor logs, customer service records, and dispute management systems for the underlying transaction. If a platform transaction is found, ingest it retroactively and re-run reconciliation. If no original transaction exists, raise an audit exception for finance team review and consider reversing the bank credit if it was processed in error."
+        }
+    ]
+}
